@@ -1,6 +1,6 @@
 # Server Side Data Table Package
 
-This package provides a convenient method `getServerSideDataTable` to fetch data for server-side DataTables in Laravel applications.
+This package provides a convenient method to fetch data for server-side DataTables in Laravel applications.
 
 ## Installation
 
