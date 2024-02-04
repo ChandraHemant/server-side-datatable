@@ -53,14 +53,14 @@ class DataTableHelper
      *           'table'=> 'table_1',
      *           'order'=> array(
      *               array('table_1', 'column_1_table_1'),
-     *               array('table_1', 'column_2_table_2'),
-     *               array('table_1', 'column_3_table_3'),
+     *               array('table_1', 'column_2_table_1'),
+     *               array('table_1', 'column_3_table_1'),
      *               array('table_2', 'column_1_table_2')
      *           ),
      *           'select'=>array(
      *               array('table_1', 'column_1_table_1'),
-     *               array('table_1', 'column_2_table_2'),
-     *               array('table_1', 'column_3_table_3'),
+     *               array('table_1', 'column_2_table_1'),
+     *               array('table_1', 'column_3_table_1'),
      *               array('table_2', 'column_1_table_2')
      *           ),
      *           'where'=>array(
