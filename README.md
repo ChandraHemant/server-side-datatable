@@ -171,3 +171,10 @@ echo json_encode($output);
 
 
 By leveraging the `DataTableHelper` class, you can seamlessly integrate server-side DataTables functionality into your Laravel application, providing a user-friendly and efficient way to handle large datasets in tabular form.
+
+#### Note: 
+Maintaining consistency in the order and length between the `$column['order']` array and the `Table Headers` is crucial for ensuring accurate and expected column sorting in the DataTable.
+
+This connection relies on the assumption that both the `$column['order']` array and the headers of the associated table share the same order and length. The `$column['order']` array is used to specify the default ordering of columns in the DataTable. Each element in this array represents a column and includes information about the table and column name, as well as the desired ordering direction (e.g., ascending or descending).
+
+For this connection to work seamlessly, it is essential that the order and length of elements in the `$column['order']` array align with the headers of the corresponding table. The DataTable interprets the order of elements in the `$column['order']` array to determine the initial sorting of columns when the page is loaded. If the order and length of elements in `$column['order']` do not match the headers of the table, unexpected sorting behavior may occur.
