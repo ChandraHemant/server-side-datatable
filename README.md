@@ -87,7 +87,7 @@ $column = array(
         array('products', 'prod_descr'),
         array('products', 'prod_total_price'),
         array('products', 'prod_nsv'),
-        array('product_category', 'cat_name')
+        array('productCategory', 'cat_name')
     ),
     'select'=>array(
         array('products', 'prod_id'),
@@ -96,7 +96,7 @@ $column = array(
         array('products', 'prod_descr'),
         array('products', 'prod_total_price'),
         array('products', 'prod_nsv'),
-        array('product_category', 'cat_name')
+        array('productCategory', 'cat_name')
     ),
     'where'=>array(
         array('column' => 'products.mf_id', 'operator' => '=', 'value' => '1')
@@ -108,7 +108,7 @@ $column = array(
 // Specify join conditions and types
 $join = array(
     'tables'=> array(
-        array('product_category', 'products'),
+        array('productCategory', 'products'),
     ),
     'fields'=>array(
         array('cat_id', 'cat_id'),   
@@ -171,10 +171,46 @@ Retrieve server-side DataTables data from an Eloquent model.
 ## Usage Example of Eloquent Model DataTable Helper
 
 ```php
+
+/**
+ * Retrieve server-side DataTables data from an Eloquent model.
+ *
+ * @param  \Illuminate\Database\Eloquent\Model  $eloquentModel
+ *   The Eloquent model to query for data.
+ *
+ * @param  array  $column
+ *   An array specifying the columns, ordering, and filtering conditions for the query.
+ *   Example:
+ *   $column = [
+ *       'orderBy' => [
+ *           ['column' => 'model_column_1', 'direction' => 'DESC'],
+ *           ['column' => 'model_relation_function.relation_model_column_1', 'direction' => 'ASC'],
+ *       ],
+ *       'order' => [
+ *           ['model_column_1'],
+ *           ['model_column_2'],
+ *           ['model_column_3'],
+ *           ['model_relation_function.relation_model_column_1'],
+ *       ],
+ *       'select' => [
+ *           ['model_column_1', 'alias_name_1'],
+ *           ['model_column_2', 'alias_name_2'],
+ *           ['model_column_3', 'alias_name_3'],
+ *           ['model_relation_function.relation_model_column_1', 'alias_name_4'],
+ *       ],
+ *       'where' => [
+ *           ['column' => 'model_column_4', 'operator' => '=', 'value' => '1'],
+ *       ],
+ *   ];
+ *
+ * @return \Illuminate\Support\Collection
+ *   The result of the server-side DataTables query.
+ */
+
 $column = [
     'orderBy' => [
         ['column' => 'prod_id', 'direction' => 'DESC'],
-        ['column' => 'product_category.cat_name', 'direction' => 'ASC'],
+        ['column' => 'productCategory.cat_name', 'direction' => 'ASC'],
     ],
     'order' => [
         ['prod_id'],
@@ -183,7 +219,7 @@ $column = [
         ['prod_descr'],
         ['prod_total_price'],
         ['prod_nsv'],
-        ['product_category.cat_name'],
+        ['productCategory.cat_name'],
     ],
     'select' => [
         ['prod_id', 'id'],
@@ -192,7 +228,7 @@ $column = [
         ['prod_descr', 'description'],
         ['prod_total_price', 'total_price'],
         ['prod_nsv', 'nsv'],
-        ['product_category.cat_name', 'category_name'],
+        ['productCategory.cat_name', 'category_name'],
     ],
     'where' => [
         ['column' => 'mf_id', 'operator' => '=', 'value' => '1'],
