@@ -75,49 +75,84 @@ class DataTableHelper
      *   The result of the database query.
      */
 
-    
     public function getServerSideDataTable($column, $join = array())
     {
         $query = $this->buildQuery($column, $join);
-    
+
         $this->applySearchFilter($query, $column['select']);
-    
+
         $this->applyOrdering($query, $column);
-    
+
         $this->applyPagination($query);
-    
+
         return $query->get();
     }
-    
+
+    /**
+     * Count the number of filtered records for server-side DataTables.
+     *
+     * @param  array  $column
+     *   An array specifying the columns, ordering, and filtering conditions for the query.
+     *
+     * @param  array  $join
+     *   An array defining the join conditions and table aliases for each table to join.
+     *   Example:
+     *   $join = [
+     *       'tables' => ['table1', 'table2'],
+     *       'fields' => [['field1', 'field2'], ['field3', 'field4']],
+     *       'joinType' => ['inner', 'left'],
+     *   ];
+     *
+     * @return int
+     *   The count of filtered records.
+     */
     public function countFilteredServerSideDataTable($column, $join = array())
     {
         $query = $this->buildQuery($column, $join);
-    
+
         $this->applySearchFilter($query, $column['select']);
-    
+
         return $query->count();
     }
-    
+
+    /**
+     * Retrieve data with join tables based on the provided column configuration and join information.
+     *
+     * @param  array  $column
+     *   An array specifying the columns, ordering, and filtering conditions for the query.
+     *
+     * @param  array  $join
+     *   An array defining the join conditions and table aliases for each table to join.
+     *   Example:
+     *   $join = [
+     *       'tables' => ['table1', 'table2'],
+     *       'fields' => [['field1', 'field2'], ['field3', 'field4']],
+     *       'joinType' => ['inner', 'left'],
+     *   ];
+     *
+     * @return \Illuminate\Support\Collection
+     *   The result of the query with join tables.
+     */
     public function getDataWithJoinTables($column, $join = array())
     {
         $query = $this->buildQuery($column, $join);
-    
+
         $this->applyOrdering($query, $column);
-    
+
         return $query->get();
     }
-    
+
     private function buildQuery($column, $join)
     {
         $query = DB::table($column['table']);
-    
+
         $this->applyWhereConditions($query, $column);
         $this->applySelectColumns($query, $column['select']);
         $this->applyJoinTables($query, $join);
-    
+
         return $query;
     }
-    
+
     private function applyWhereConditions($query, $column)
     {
         if (isset($column['where'])) {
@@ -126,7 +161,7 @@ class DataTableHelper
             }
         }
     }
-    
+
     private function applySelectColumns($query, $selectColumns)
     {
         if (isset($selectColumns)) {
@@ -135,14 +170,14 @@ class DataTableHelper
             }
         }
     }
-    
+
     private function applyJoinTables($query, $join)
     {
         if (!empty($join) && isset($join['tables'])) {
             foreach ($join['tables'] as $i => $joinTable) {
                 $type = $join['joinType'][$i] ?? 'inner';
                 $queryMethod = $type == 'left' ? 'leftJoin' : ($type == 'right' ? 'rightJoin' : 'join');
-    
+
                 $query->$queryMethod(
                     $joinTable[0],
                     "{$joinTable[0]}.{$join['fields'][$i][0]}",
@@ -152,7 +187,7 @@ class DataTableHelper
             }
         }
     }
-    
+
     private function applySearchFilter($query, $selectColumns)
     {
         $i = 0;
@@ -167,7 +202,7 @@ class DataTableHelper
             $i++;
         }
     }
-    
+
     private function applyOrdering($query, $column)
     {
         if (request()->input('order') && isset($column['order'])) {
@@ -181,7 +216,7 @@ class DataTableHelper
             }
         }
     }
-    
+
     private function applyPagination($query)
     {
         if (filled(request()->input('length')) && filled(request()->input('start'))) {
