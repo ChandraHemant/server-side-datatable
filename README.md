@@ -76,7 +76,7 @@ Applies pagination to the query based on the user-provided start and length para
 ## Usage Example
 
 ```php
-$helper = new DataTableHelper();
+
 // Specify columns, ordering, and filtering conditions
 $column = array(
     'table'=> 'products',
@@ -118,8 +118,8 @@ $join = array(
     ),
 );
 
-$list = $helper->getServerSideDataTable($column, $join);
-$count = $helper->countFilteredServerSideDataTable($column, $join);
+$list = DataTableHelper::getServerSideDataTable($column, $join);
+$count = DataTableHelper::countFilteredServerSideDataTable($column, $join);
 
 /**
  * Construct the output array for a server-side DataTable response.
@@ -161,6 +161,47 @@ $output = array(
 echo json_encode($output);
 ```
 
+# Eloquent Model DataTable Helper
+This PHP class, `ModelDataTableHelper`, provides helper methods for retrieving server-side DataTables data from an Eloquent model. It offers options for ordering, filtering, and joining multiple tables, making it a versatile tool for interacting with database tables in Laravel applications.
+
+### `getServerSideDataTable`
+
+Retrieve server-side DataTables data from an Eloquent model.
+
+## Usage Example of Eloquent Model DataTable Helper
+
+```php
+$column = [
+    'orderBy' => [
+        ['column' => 'prod_id', 'direction' => 'DESC'],
+        ['column' => 'product_category.cat_name', 'direction' => 'ASC'],
+    ],
+    'order' => [
+        ['prod_id'],
+        ['prod_name'],
+        ['prod_type'],
+        ['prod_descr'],
+        ['prod_total_price'],
+        ['prod_nsv'],
+        ['product_category.cat_name'],
+    ],
+    'select' => [
+        ['prod_id', 'id'],
+        ['prod_name', 'name'],
+        ['prod_type', 'type'],
+        ['prod_descr', 'description'],
+        ['prod_total_price', 'total_price'],
+        ['prod_nsv', 'nsv'],
+        ['product_category.cat_name', 'category_name'],
+    ],
+    'where' => [
+        ['column' => 'mf_id', 'operator' => '=', 'value' => '1'],
+    ],
+];
+
+$list = ModelDataTableHelper::getServerSideDataTable(new Product(), $column);
+```
+
 ## How to Use
 
 1. *Installation*: Ensure that the DataTableHelper class is included in your Laravel project.
@@ -169,8 +210,7 @@ echo json_encode($output);
 4. *Counting Filtered Rows*: Optionally, use the `countFilteredServerSideDataTable` method to determine the total count of filtered rows before pagination.
 5. *Customization*: Adjust the class according to your specific use case by modifying the methods or extending its functionality.
 
-
-By leveraging the `DataTableHelper` class, you can seamlessly integrate server-side DataTables functionality into your Laravel application, providing a user-friendly and efficient way to handle large datasets in tabular form.
+By leveraging the `DataTableHelper` and `ModelDataTableHelper` class, you can seamlessly integrate server-side DataTables functionality into your Laravel application, providing a user-friendly and efficient way to handle large datasets in tabular form.
 
 #### Note: 
 Maintaining consistency in the order and length between the `$column['order']` array and the `Table Headers` is crucial for ensuring accurate and expected column sorting in the DataTable.
