@@ -76,6 +76,66 @@ Applies pagination to the query based on the user-provided start and length para
 ## Usage Example
 
 ```php
+/**
+ * Retrieve data from a database table with the option to join multiple tables.
+ *
+ * @param  array|string|null  $table
+ *   The name of the database table to retrieve data from, or an array of table names if joining multiple tables.
+ *   If not specified, the default table name will be used.
+ *
+ * @param  array|string|null  $join
+ *   An array defining the join conditions and table aliases for each table to join.
+ *   The array should be structured as follows:
+ *     - 'tables': An array of table names to join in the query, in the order that they should be joined.
+ *     - 'fields': An array of field names to select from each table in the query, in the same order as the 'tables' array.
+ *     - 'joinType': An array of join types to use for each join, in the same order as the 'tables' array.
+ *   If not specified, no join will be performed.
+ *   Example:
+*       $join = array(
+*           'tables'=> array(
+*               array(
+*                   'table_1', 'table_2'
+*               ),
+*           ),
+*           'fields'=>array(
+*               array(
+*                   'column_table_1', 'column_table_2'
+*               ),
+*           ),
+*           'join_type'=>array(
+*               'inner',
+*           ),
+*       );
+ *
+ * @param  array  $column
+ *   An array specifying the columns, ordering, and filtering conditions for the query.
+ *   Example:
+ *
+ *       $column = array(
+ *           'table'=> 'table_1',
+ *           'order'=> array(
+ *               array('table_1', 'column_1_table_1'),
+ *               array('table_1', 'column_2_table_1'),
+ *               array('table_1', 'column_3_table_1'),
+ *               array('table_2', 'column_1_table_2')
+ *           ),
+ *           'select'=>array(
+ *               array('table_1', 'column_1_table_1'),
+ *               array('table_1', 'column_2_table_1'),
+ *               array('table_1', 'column_3_table_1'),
+ *               array('table_2', 'column_1_table_2')
+ *           ),
+ *           'where'=>array(
+ *               array('column' => 'table_1.column_name', 'operator' => '=', 'value' => '1')
+ *           ),
+ *           'orderBy'=>array(
+ *               array('column' => 'column_.column_name', 'direction' => 'DESC')
+ *           ),
+ *       );
+ *
+ * @return \Illuminate\Support\Collection
+ *   The result of the database query.
+ */
 
 // Specify columns, ordering, and filtering conditions
 $column = array(
