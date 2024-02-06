@@ -140,27 +140,46 @@ class ModelDataTableHelper
     {
         foreach ($column['where'] ?? [] as $where) {
             $isEncrypted = $where['encrypted'] ?? false;
+            $isRaw = $where['isRaw'] ?? false;
+            $isArray = $where['isArray'] ?? false;
             $column = $where['column'];
 
+            // Extract relation and column if applicable
             if (strpos($column, '.') !== false) {
                 list($relation, $column) = explode('.', $column);
             } else {
                 $relation = null;
             }
 
-            $query->when($isEncrypted, function ($query) use ($relation, $column, $where) {
-                $query->whereHas($relation, function ($query) use ($column, $where) {
-                    $query->where(DB::raw("md5({$column})"), $where['operator'], $where['value']);
-                });
-            }, function ($query) use ($relation, $column, $where) {
-                if ($relation !== null) {
-                    $query->whereHas($relation, function ($query) use ($column, $where) {
-                        $query->where($column, $where['operator'], $where['value']);
+            // Define column expression based on encryption
+            $columnExpression = $isEncrypted ? DB::raw("md5({$column})") : $column;
+
+            // Handle raw condition for dynamic expressions
+            if ($isRaw && strpos($column, '?') !== false) {
+                // Replace the placeholder dynamically
+                $columnExpression = str_replace('?', $where['value'], $columnExpression);
+                $query->whereRaw($columnExpression);
+            } else {
+                $query->when($relation !== null, function ($query) use ($relation, $columnExpression, $where, $isRaw, $isArray) {
+                    $query->whereHas($relation, function ($query) use ($columnExpression, $where, $isRaw, $isArray) {
+                        if ($isRaw) {
+                            $query->whereRaw($columnExpression, $where['operator'], $where['value']);
+                        } elseif ($isArray) {
+                            $query->whereIn($columnExpression, $where['value']);
+                        } else {
+                            $query->where($columnExpression, $where['operator'], $where['value']);
+                        }
                     });
-                } else {
-                    $query->where("{$query->getModel()->getTable()}.{$column}", $where['operator'], $where['value']);
-                }
-            });
+                }, function ($query) use ($columnExpression, $where, $isRaw, $isArray) {
+                    if ($isRaw) {
+                        $query->whereRaw($columnExpression, $where['operator'], $where['value']);
+                    } elseif ($isArray) {
+                        $query->whereIn($columnExpression, $where['value']);
+                    } else {
+                        $query->where($columnExpression, $where['operator'], $where['value']);
+                    }
+                });
+            }
         }
     }
 
