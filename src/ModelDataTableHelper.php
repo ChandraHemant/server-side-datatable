@@ -204,8 +204,14 @@ class ModelDataTableHelper
     private static function applySearchFilter($query, array $column, $searchValue)
     {
         $query->where(function ($query) use ($column, $searchValue) {
-            foreach ($column['select'] as $item) {
-                self::applySearchFilterForItem($query, $item, $searchValue);
+            if(!empty($column['search'])){
+                foreach ($column['search'] as $search) {
+                    self::applySearchFilterForColumn($query, $search);
+                }
+            }else{
+                foreach ($column['select'] as $item) {
+                    self::applySearchFilterForItem($query, $item, $searchValue);
+                }
             }
         });
     }
@@ -234,6 +240,29 @@ class ModelDataTableHelper
             $query->orWhere("{$query->getModel()->getTable()}.{$column}", 'like', "%{$searchValue}%");
         }
 
+    }
+
+    /**
+     * Apply SELECT columns to the query based on the provided column array.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     *   The query builder instance.
+     *
+     * @param  array  $column
+     *   The array specifying SELECT columns.
+     */
+    private static function applySearchFilterForColumn($query, $item)
+    {
+        list($relation, $column) = self::getColumnDetails($item[0]);
+        list($relation2, $column2) = self::getColumnDetails($item[2]);
+
+        if($relation){
+            $query->orWhereHas($relation, function ($query) use ($column, $column2, $item) {
+                $query->whereColumn($column, $item[1], $column2);
+            });
+        } else {
+            $query->whereColumn($item[0], $item[1], $item[2]);
+        }
     }
 
     /**
