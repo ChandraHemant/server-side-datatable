@@ -139,6 +139,7 @@ class ModelDataTableHelper
     private static function applyWhereConditions($query, array $column)
     {
         foreach ($column['where'] ?? [] as $where) {
+            $isColumn = $where['isColumn'] ?? false;
             $isEncrypted = $where['encrypted'] ?? false;
             $isRaw = $where['isRaw'] ?? false;
             $isArray = $where['isArray'] ?? false;
@@ -160,21 +161,25 @@ class ModelDataTableHelper
                 $columnExpression = str_replace('?', $where['value'], $columnExpression);
                 $query->whereRaw($columnExpression);
             } else {
-                $query->when($relation !== null, function ($query) use ($relation, $columnExpression, $where, $isRaw, $isArray) {
-                    $query->whereHas($relation, function ($query) use ($columnExpression, $where, $isRaw, $isArray) {
+                $query->when($relation !== null, function ($query) use ($relation, $columnExpression, $where, $isRaw, $isArray, $isColumn) {
+                    $query->whereHas($relation, function ($query) use ($columnExpression, $where, $isRaw, $isArray, $isColumn) {
                         if ($isRaw) {
                             $query->whereRaw($columnExpression, $where['operator'], $where['value']);
                         } elseif ($isArray) {
                             $query->whereIn($columnExpression, $where['value']);
+                        } elseif ($isColumn) {
+                            $query->whereColumn($columnExpression, $where['operator'], $where['value']);
                         } else {
                             $query->where($columnExpression, $where['operator'], $where['value']);
                         }
                     });
-                }, function ($query) use ($columnExpression, $where, $isRaw, $isArray) {
+                }, function ($query) use ($columnExpression, $where, $isRaw, $isArray, $isColumn) {
                     if ($isRaw) {
                         $query->whereRaw($columnExpression, $where['operator'], $where['value']);
                     } elseif ($isArray) {
                         $query->whereIn($columnExpression, $where['value']);
+                    } elseif ($isColumn) {
+                        $query->whereColumn($columnExpression, $where['operator'], $where['value']);
                     } else {
                         $query->where($columnExpression, $where['operator'], $where['value']);
                     }
@@ -221,9 +226,14 @@ class ModelDataTableHelper
     {
         list($relation, $column) = self::getColumnDetails($item[0]);
 
-        $query->orWhereHas($relation, function ($query) use ($column, $searchValue) {
-            $query->where("{$column}", 'like', "%{$searchValue}%");
-        });
+        if($relation){
+            $query->orWhereHas($relation, function ($query) use ($column, $searchValue) {
+                $query->where("{$column}", 'like', "%{$searchValue}%");
+            });
+        } else {
+            $query->orWhere("{$query->getModel()->getTable()}.{$column}", 'like', "%{$searchValue}%");
+        }
+
     }
 
     /**
@@ -317,7 +327,11 @@ class ModelDataTableHelper
 
         if ($relation) {
             $relatedTable = $query->getModel()->{$relation}()->getRelated();
-            $query->addSelect(["{$relatedTable->getTable()}.{$column} as {$item[1]}"]);
+            if(count($item)>1){
+                $query->addSelect(["{$relatedTable->getTable()}.{$column} as {$item[1]}"]);
+            }else{
+                $query->addSelect(["{$relatedTable->getTable()}.{$column}"]);
+            }
 
             $query->join(
                 $relatedTable->getTable(),
@@ -326,7 +340,11 @@ class ModelDataTableHelper
                 "{$query->getModel()->getTable()}.{$query->getModel()->{$relation}()->getForeignKeyName()}"
             );
         } else {
-            $query->addSelect("{$item[0]} as {$item[1]}");
+            if(count($item)>1){
+                $query->addSelect("{$query->getModel()->getTable()}.{$item[0]} as {$item[1]}");
+            }else{
+                $query->addSelect("{$query->getModel()->getTable()}.{$item[0]}");
+            }
         }
     }
 

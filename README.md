@@ -263,6 +263,7 @@ Retrieve server-side DataTables data from an Eloquent model.
  *           ['column' => 'model_relation_function.relation_model_column_1', 'operator' => '=', 'value' => '1', 'encrypted' => true],
  *           ['column' => 'YEAR(model_column_5) = ?', 'operator' => '=', 'value' => '2024', 'isRaw'=>true],
  *           ['column' => 'model_relation_function_1.relation_model_column_1', 'operator' => '!=', 'value' => '["5,"6"]', 'isArray'=>true],
+ *           ['column' => 'model_column_6', 'operator' => '>=', 'value' => 'model_column_7', 'isColumn' => true],
  *       ],
  *   ];
  *
@@ -291,12 +292,14 @@ $column = [
         ['prod_descr', 'description'],
         ['prod_total_price', 'total_price'],
         ['prod_nsv', 'nsv'],
+        ['basic_price', 'price'],
         ['productCategory.cat_name', 'category_name'],
     ],
     'where' => [
         ['column' => 'productCategory.mf_id', 'operator' => '=', 'value' => 'c4ca4238a0b923820dcc509a6f75849b', 'encrypted' => true],
         ['column' => 'YEAR(we_from_pre) = ?', 'operator' => '=', 'value' => session()->get('financialYear'), 'isRaw'=>true],
         ['column' => 'product_category.cat_type', 'operator' => '!=', 'value' => '["5,"6"]', 'isArray'=>true],
+        ['column' => 'prod_nsv', 'operator' => '=', 'value' => 'basic_price', 'isColumn' => true],
     ],
 ];
 

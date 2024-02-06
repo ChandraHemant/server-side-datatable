@@ -166,7 +166,11 @@ class DataTableHelper
     {
         if (isset($selectColumns)) {
             foreach ($selectColumns as $select) {
-                $query->addSelect("{$select[0]}.{$select[1]}");
+                if(count($select)>2){
+                    $query->addSelect("{$select[0]}.{$select[1]} as {$select[2]}");
+                }else{
+                    $query->addSelect("{$select[0]}.{$select[1]}");
+                }
             }
         }
     }
