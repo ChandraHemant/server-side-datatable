@@ -3,6 +3,7 @@
 namespace ChandraHemant\ServerSideDatatable;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class: ModelDataTableHelper
@@ -138,7 +139,28 @@ class ModelDataTableHelper
     private static function applyWhereConditions($query, array $column)
     {
         foreach ($column['where'] ?? [] as $where) {
-            $query->where("{$query->getModel()->getTable()}.{$where['column']}", $where['operator'], $where['value']);
+            $isEncrypted = $where['encrypted'] ?? false;
+            $column = $where['column'];
+
+            if (strpos($column, '.') !== false) {
+                list($relation, $column) = explode('.', $column);
+            } else {
+                $relation = null;
+            }
+
+            $query->when($isEncrypted, function ($query) use ($relation, $column, $where) {
+                $query->whereHas($relation, function ($query) use ($column, $where) {
+                    $query->where(DB::raw("md5({$column})"), $where['operator'], $where['value']);
+                });
+            }, function ($query) use ($relation, $column, $where) {
+                if ($relation !== null) {
+                    $query->whereHas($relation, function ($query) use ($column, $where) {
+                        $query->where($column, $where['operator'], $where['value']);
+                    });
+                } else {
+                    $query->where("{$query->getModel()->getTable()}.{$column}", $where['operator'], $where['value']);
+                }
+            });
         }
     }
 

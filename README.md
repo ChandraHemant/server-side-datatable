@@ -260,6 +260,7 @@ Retrieve server-side DataTables data from an Eloquent model.
  *       ],
  *       'where' => [
  *           ['column' => 'model_column_4', 'operator' => '=', 'value' => '1'],
+ *           ['column' => 'model_relation_function.relation_model_column_1', 'operator' => '=', 'value' => '1', 'encrypted' => true],
  *       ],
  *   ];
  *
@@ -291,7 +292,7 @@ $column = [
         ['productCategory.cat_name', 'category_name'],
     ],
     'where' => [
-        ['column' => 'mf_id', 'operator' => '=', 'value' => '1'],
+        ['column' => 'productCategory.mf_id', 'operator' => '=', 'value' => 'c4ca4238a0b923820dcc509a6f75849b', 'encrypted' => true],
     ],
 ];
 
