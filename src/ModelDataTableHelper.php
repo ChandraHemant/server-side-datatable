@@ -139,7 +139,6 @@ class ModelDataTableHelper
     private static function applyWhereConditions($query, array $column)
     {
         foreach ($column['where'] ?? [] as $where) {
-            $isColumn = $where['isColumn'] ?? false;
             $isEncrypted = $where['encrypted'] ?? false;
             $isRaw = $where['isRaw'] ?? false;
             $isArray = $where['isArray'] ?? false;
@@ -161,25 +160,21 @@ class ModelDataTableHelper
                 $columnExpression = str_replace('?', $where['value'], $columnExpression);
                 $query->whereRaw($columnExpression);
             } else {
-                $query->when($relation !== null, function ($query) use ($relation, $columnExpression, $where, $isRaw, $isArray, $isColumn) {
-                    $query->whereHas($relation, function ($query) use ($columnExpression, $where, $isRaw, $isArray, $isColumn) {
+                $query->when($relation !== null, function ($query) use ($relation, $columnExpression, $where, $isRaw, $isArray) {
+                    $query->whereHas($relation, function ($query) use ($columnExpression, $where, $isRaw, $isArray) {
                         if ($isRaw) {
                             $query->whereRaw($columnExpression, $where['operator'], $where['value']);
                         } elseif ($isArray) {
                             $query->whereIn($columnExpression, $where['value']);
-                        } elseif ($isColumn) {
-                            $query->whereColumn($columnExpression, $where['operator'], $where['value']);
                         } else {
                             $query->where($columnExpression, $where['operator'], $where['value']);
                         }
                     });
-                }, function ($query) use ($columnExpression, $where, $isRaw, $isArray, $isColumn) {
+                }, function ($query) use ($columnExpression, $where, $isRaw, $isArray) {
                     if ($isRaw) {
                         $query->whereRaw($columnExpression, $where['operator'], $where['value']);
                     } elseif ($isArray) {
                         $query->whereIn($columnExpression, $where['value']);
-                    } elseif ($isColumn) {
-                        $query->whereColumn($columnExpression, $where['operator'], $where['value']);
                     } else {
                         $query->where($columnExpression, $where['operator'], $where['value']);
                     }
@@ -204,15 +199,15 @@ class ModelDataTableHelper
     private static function applySearchFilter($query, array $column, $searchValue)
     {
         $query->where(function ($query) use ($column, $searchValue) {
-            if(!empty($column['search'])){
-                foreach ($column['search'] as $search) {
-                    self::applySearchFilterForColumn($query, $search);
+                foreach ($column['search'] ?? [] as $search) {
+                    $isColumn = $search['isColumn'] ?? false;
+                    if ($isColumn && $search['condition'] == strtolower($searchValue)) {
+                        self::applySearchFilterForColumn($query, $search);
+                    }
                 }
-            }else{
                 foreach ($column['select'] as $item) {
                     self::applySearchFilterForItem($query, $item, $searchValue);
                 }
-            }
         });
     }
 
@@ -253,15 +248,15 @@ class ModelDataTableHelper
      */
     private static function applySearchFilterForColumn($query, $item)
     {
-        list($relation, $column) = self::getColumnDetails($item[0]);
-        list($relation2, $column2) = self::getColumnDetails($item[2]);
+        list($relation, $column) = self::getColumnDetails($item['column']);
+        list($relation2, $column2) = self::getColumnDetails($item['value']);
 
         if($relation){
             $query->orWhereHas($relation, function ($query) use ($column, $column2, $item) {
-                $query->whereColumn($column, $item[1], $column2);
+                $query->whereColumn($column, $item['operator'], $column2);
             });
         } else {
-            $query->whereColumn($item[0], $item[1], $item[2]);
+            $query->whereColumn($column, $item['operator'], $column2);
         }
     }
 
@@ -425,5 +420,4 @@ class ModelDataTableHelper
         return collect($query->getQuery()->joins ?? [])
             ->contains('table', $table);
     }
-
 }
