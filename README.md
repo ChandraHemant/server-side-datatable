@@ -295,6 +295,10 @@ $column = [
         ['basic_price', 'price'],
         ['productCategory.cat_name', 'category_name'],
     ],
+    'with' => [
+        ['relation'=>'audit_employee'],
+        ['relation'=>'audits', 'nested' => [ 'relation' => 'user_detail', 'selectColumn' => ['emp_id', 'emp_name']]],
+    ],
     'where' => [
         ['column' => 'productCategory.mf_id', 'operator' => '=', 'value' => 'c4ca4238a0b923820dcc509a6f75849b', 'encrypted' => true],
         ['column' => 'YEAR(we_from_pre) = ?', 'operator' => '=', 'value' => session()->get('financialYear'), 'isRaw'=>true],
