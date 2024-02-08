@@ -70,10 +70,6 @@ class ModelDataTableHelper
 
         self::applyPagination($query);
 
-        if(isset($column['with'])){
-            $query->with($column['with']);
-        }
-
         return $query->get();
     }
 
@@ -304,55 +300,29 @@ class ModelDataTableHelper
      * @param  array  $column
      *   The array specifying SELECT columns.
      */
-    private static function applyWithConditions($query, array $column)
+    private static function applyWithConditions($query, array $columns)
     {
-        foreach ($column['with'] ?? [] as $relationName => $selects) {
-            if (is_array($selects)) {
-                self::applyNestedWithConditions($query, $relationName, $selects);
-            } else {
-                self::applySingleWithCondition($query, $selects, $relationName);
+        foreach ($columns as $column) {
+            if (isset($column['relation'])) {
+                $query->with([$column['relation'] => function ($query) use ($column) {
+                    self::applyNestedWithConditions($query, $column);
+                }]);
             }
         }
     }
-    
-    private static function applyNestedWithConditions($query, $relationName, $selects)
+
+    private static function applyNestedWithConditions($query, $column)
     {
-        if ($query->getRelation($relationName)) {
-            $query->with([$relationName => function ($query) use ($selects) {
-                foreach ($selects as $subRelationName => $subSelects) {
-                    if (is_array($subSelects)) {
-                        self::applyNestedWithConditions($query, $subRelationName, $subSelects);
-                    } else {
-                        self::applySingleWithCondition($query, $subSelects, $subRelationName);
-                    }
-                }
-            }]);
-        }
-    }
-    
-    private static function applySingleWithCondition($query, $selects, $relation)
-    {
-        if (is_array($selects)) {
-            // Nested relationship with select columns
-            self::applyNestedWithConditions($query, $relation, $selects);
-        } else {
-            if ($query->getRelation($selects) || method_exists($query->getModel(), $selects)) {
-                $query->with($relation);
-            } else {
-                self::applyWithSelectColumn($query, $selects, $relation);
-            }
-        }
-    }
-    
-    private static function applyWithSelectColumn($query, $selects, $relation)
-    {
-        $query->with([$relation => function ($query) use ($selects) {
-            foreach ($selects as $select) {
+        if (isset($column['selectColumn'])) {
+            foreach ($column['selectColumn'] as $select) {
                 $query->addSelect($select);
             }
-        }]);
+        }
+
+        if (isset($column['nested'])) {
+            self::applyWithConditions($query, [$column['nested']]);
+        }
     }
-    
 
     /**
      * Apply SELECT columns to the query based on the provided column array.
