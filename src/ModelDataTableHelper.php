@@ -57,6 +57,8 @@ class ModelDataTableHelper
 
         self::applyWhereConditions($query, $column);
 
+        self::applyWithConditions($query, $column);
+
         $searchValue = request()->input('search.value');
         if ($searchValue) {
             self::applySearchFilter($query, $column, $searchValue);
@@ -67,6 +69,10 @@ class ModelDataTableHelper
         self::applyOrderBy($query, $column);
 
         self::applyPagination($query);
+
+        if(isset($column['with'])){
+            $query->with($column['with']);
+        }
 
         return $query->get();
     }
@@ -89,6 +95,8 @@ class ModelDataTableHelper
         $query = $eloquentModel->query();
 
         self::applyWhereConditions($query, $column);
+
+        self::applyWithConditions($query, $column);
 
         $searchValue = request()->input('search.value');
         if ($searchValue) {
@@ -119,6 +127,8 @@ class ModelDataTableHelper
 
         self::applyWhereConditions($query, $column);
 
+        self::applyWithConditions($query, $column);
+
         self::applySelectColumns($query, $column);
 
         self::applyOrderBy($query, $column);
@@ -144,12 +154,7 @@ class ModelDataTableHelper
             $isArray = $where['isArray'] ?? false;
             $column = $where['column'];
 
-            // Extract relation and column if applicable
-            if (strpos($column, '.') !== false) {
-                list($relation, $column) = explode('.', $column);
-            } else {
-                $relation = null;
-            }
+            list($relation, $column) = self::getColumnDetails($column);
 
             // Define column expression based on encryption
             $columnExpression = $isEncrypted ? DB::raw("md5({$column})") : $column;
@@ -172,16 +177,17 @@ class ModelDataTableHelper
                     });
                 }, function ($query) use ($columnExpression, $where, $isRaw, $isArray) {
                     if ($isRaw) {
-                        $query->whereRaw($columnExpression, $where['operator'], $where['value']);
+                        $query->whereRaw("{$query->getModel()->getTable()}.{$columnExpression}", $where['operator'], $where['value']);
                     } elseif ($isArray) {
-                        $query->whereIn($columnExpression, $where['value']);
+                        $query->whereIn("{$query->getModel()->getTable()}.{$columnExpression}", $where['value']);
                     } else {
-                        $query->where($columnExpression, $where['operator'], $where['value']);
+                        $query->where("{$query->getModel()->getTable()}.{$columnExpression}", $where['operator'], $where['value']);
                     }
                 });
             }
         }
     }
+
 
 
     /**
@@ -228,14 +234,23 @@ class ModelDataTableHelper
         list($relation, $column) = self::getColumnDetails($item[0]);
 
         if($relation){
-            $query->orWhereHas($relation, function ($query) use ($column, $searchValue) {
-                $query->where("{$column}", 'like', "%{$searchValue}%");
-            });
+            $relatedTable = $query->getModel()->{$relation}()->getRelated();
+
+            if (!self::isJoinApplied($query, $relatedTable->getTable())) {
+                $query->join(
+                    $relatedTable->getTable(),
+                    "{$relatedTable->getTable()}.{$relatedTable->getKeyName()}",
+                    '=',
+                    "{$query->getModel()->getTable()}.{$query->getModel()->{$relation}()->getForeignKeyName()}"
+                );
+            }
+            $query->orWhere("{$relatedTable->getTable()}.{$column}", 'like', "%{$searchValue}%");
         } else {
             $query->orWhere("{$query->getModel()->getTable()}.{$column}", 'like', "%{$searchValue}%");
         }
 
     }
+
 
     /**
      * Apply SELECT columns to the query based on the provided column array.
@@ -252,11 +267,50 @@ class ModelDataTableHelper
         list($relation2, $column2) = self::getColumnDetails($item['value']);
 
         if($relation){
-            $query->orWhereHas($relation, function ($query) use ($column, $column2, $item) {
-                $query->whereColumn($column, $item['operator'], $column2);
-            });
+
+            $relatedTable = $query->getModel()->{$relation}()->getRelated();
+
+            if (!self::isJoinApplied($query, $relatedTable->getTable())) {
+                $query->join(
+                    $relatedTable->getTable(),
+                    "{$relatedTable->getTable()}.{$relatedTable->getKeyName()}",
+                    '=',
+                    "{$query->getModel()->getTable()}.{$query->getModel()->{$relation}()->getForeignKeyName()}"
+                );
+            }
+
+            $relatedTable2 = $query->getModel()->{$relation2}()->getRelated();
+
+            if (!self::isJoinApplied($query, $relatedTable2->getTable())) {
+                $query->join(
+                    $relatedTable2->getTable(),
+                    "{$relatedTable2->getTable()}.{$relatedTable2->getKeyName()}",
+                    '=',
+                    "{$query->getModel()->getTable()}.{$query->getModel()->{$relation2}()->getForeignKeyName()}"
+                );
+            }
+            $query->whereColumn("{$relatedTable->getTable()}.{$column}", $item['operator'], "{$relatedTable2->getTable()}.{$column2}");
         } else {
-            $query->whereColumn($column, $item['operator'], $column2);
+            $query->whereColumn("{$query->getModel()->getTable()}.{$column}", $item['operator'], "{$query->getModel()->getTable()}.{$column2}");
+        }
+    }
+
+    /**
+     * Apply SELECT columns to the query based on the provided column array.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     *   The query builder instance.
+     *
+     * @param  array  $column
+     *   The array specifying SELECT columns.
+     */
+    private static function applyWithConditions($query, array $column)
+    {
+        foreach ($column['with'] ?? [] as $relation) {
+            $query->with($relation);
+            foreach ($relation as $select) {
+                self::applyWithSelectColumn($query, $select, $relation);
+            }
         }
     }
 
@@ -345,26 +399,50 @@ class ModelDataTableHelper
      * @param  array  $item
      *   The item specifying the column and alias for SELECT.
      */
+    private static function applyWithSelectColumn($query, $item, $relation)
+    {
+        $query->whereHas($relation, function ($query) use ($item) {
+            if (is_array($item) && count($item) > 1) {
+                $query->addSelect(["{$item[0]} as {$item[1]}"]);
+            }else {
+                $query->addSelect(["{$item[0]}"]);
+            }
+        });
+    }
+
+    /**
+     * Apply SELECT column to the query for a specific item in the column array.
+     *
+     * @param  \Illuminate\Database\Query\Builder  $query
+     *   The query builder instance.
+     *
+     * @param  array  $item
+     *   The item specifying the column and alias for SELECT.
+     */
     private static function applySelectColumn($query, $item)
     {
         list($relation, $column) = self::getColumnDetails($item[0]);
 
         if ($relation) {
             $relatedTable = $query->getModel()->{$relation}()->getRelated();
-            if(count($item)>1){
+
+            if (!self::isJoinApplied($query, $relatedTable->getTable())) {
+                $query->join(
+                    $relatedTable->getTable(),
+                    "{$relatedTable->getTable()}.{$relatedTable->getKeyName()}",
+                    '=',
+                    "{$query->getModel()->getTable()}.{$query->getModel()->{$relation}()->getForeignKeyName()}"
+                );
+            }
+
+            if (is_array($item) && count($item) > 1) {
                 $query->addSelect(["{$relatedTable->getTable()}.{$column} as {$item[1]}"]);
             }else{
                 $query->addSelect(["{$relatedTable->getTable()}.{$column}"]);
             }
 
-            $query->join(
-                $relatedTable->getTable(),
-                "{$relatedTable->getTable()}.{$relatedTable->getKeyName()}",
-                '=',
-                "{$query->getModel()->getTable()}.{$query->getModel()->{$relation}()->getForeignKeyName()}"
-            );
         } else {
-            if(count($item)>1){
+            if (is_array($item) && count($item) > 1) {
                 $query->addSelect("{$query->getModel()->getTable()}.{$item[0]} as {$item[1]}");
             }else{
                 $query->addSelect("{$query->getModel()->getTable()}.{$item[0]}");
