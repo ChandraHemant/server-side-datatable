@@ -306,13 +306,53 @@ class ModelDataTableHelper
      */
     private static function applyWithConditions($query, array $column)
     {
-        foreach ($column['with'] ?? [] as $relation) {
-            $query->with($relation);
-            foreach ($relation as $select) {
-                self::applyWithSelectColumn($query, $select, $relation);
+        foreach ($column['with'] ?? [] as $relationName => $selects) {
+            if (is_array($selects)) {
+                self::applyNestedWithConditions($query, $relationName, $selects);
+            } else {
+                self::applySingleWithCondition($query, $selects, $relationName);
             }
         }
     }
+    
+    private static function applyNestedWithConditions($query, $relationName, $selects)
+    {
+        if ($query->getRelation($relationName)) {
+            $query->with([$relationName => function ($query) use ($selects) {
+                foreach ($selects as $subRelationName => $subSelects) {
+                    if (is_array($subSelects)) {
+                        self::applyNestedWithConditions($query, $subRelationName, $subSelects);
+                    } else {
+                        self::applySingleWithCondition($query, $subSelects, $subRelationName);
+                    }
+                }
+            }]);
+        }
+    }
+    
+    private static function applySingleWithCondition($query, $selects, $relation)
+    {
+        if (is_array($selects)) {
+            // Nested relationship with select columns
+            self::applyNestedWithConditions($query, $relation, $selects);
+        } else {
+            if ($query->getRelation($selects) || method_exists($query->getModel(), $selects)) {
+                $query->with($relation);
+            } else {
+                self::applyWithSelectColumn($query, $selects, $relation);
+            }
+        }
+    }
+    
+    private static function applyWithSelectColumn($query, $selects, $relation)
+    {
+        $query->with([$relation => function ($query) use ($selects) {
+            foreach ($selects as $select) {
+                $query->addSelect($select);
+            }
+        }]);
+    }
+    
 
     /**
      * Apply SELECT columns to the query based on the provided column array.
@@ -388,26 +428,6 @@ class ModelDataTableHelper
         } else {
             $query->orderBy("{$query->getModel()->getTable()}.{$column}", $direction);
         }
-    }
-
-    /**
-     * Apply SELECT column to the query for a specific item in the column array.
-     *
-     * @param  \Illuminate\Database\Query\Builder  $query
-     *   The query builder instance.
-     *
-     * @param  array  $item
-     *   The item specifying the column and alias for SELECT.
-     */
-    private static function applyWithSelectColumn($query, $item, $relation)
-    {
-        $query->whereHas($relation, function ($query) use ($item) {
-            if (is_array($item) && count($item) > 1) {
-                $query->addSelect(["{$item[0]} as {$item[1]}"]);
-            }else {
-                $query->addSelect(["{$item[0]}"]);
-            }
-        });
     }
 
     /**
