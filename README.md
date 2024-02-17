@@ -1,4 +1,4 @@
-# Server Side Data Table Package
+# Server Side Data Table Packages
 
 This package provides a convenient method to fetch data for server-side DataTables in Laravel applications.
 
@@ -9,15 +9,115 @@ You can install this package via Composer:
 ```bash
 composer require chandra-hemant/server-side-datatable
 ```
+## Overview
 
-## DataTableHelper Class
-
-The DataTableHelper class is a PHP utility designed to enhance server-side data retrieval for DataTables within Laravel applications. DataTables is a popular JavaScript library used for creating interactive and dynamic tables in web applications. This class provides a set of methods to build and execute flexible database queries, supporting features such as table joins, column selection, search filtering, ordering, and pagination. 
+The ChandraHemant/ServerSideDatatable package provides helper methods for retrieving data from a database table with the option to join multiple tables. This package is designed to facilitate server-side processing for DataTables in Laravel applications.
 
 ## Class Overview
 
 ##### Namespace: ChandraHemant\ServerSideDatatable
 ##### Author: Hemant Kumar Chandra
+
+# DynamicModelDataTableHelper Class
+
+The `DynamicModelDataTableHelper` class provides a set of methods for retrieving and manipulating data from a database table, especially tailored for use with Laravel's Eloquent ORM. This guide outlines how to effectively utilize these methods to implement server-side data tables with dynamic conditions, pagination, and search functionality.
+
+## Usage
+
+### Retrieving Data
+
+You can retrieve data from your database table using the `getServerSideDataTable` method.
+
+```php
+use App\Models\YourModel; // Import your Eloquent model
+
+$dynamicConditions = [
+    // Specify your dynamic conditions here
+];
+
+$data = DynamicModelDataTableHelper::getServerSideDataTable(new YourModel(), $dynamicConditions);
+```
+
+### Counting Filtered Records
+
+To count the filtered records without fetching all data, you can use the `countFilteredServerSideDataTable` method.
+
+```php
+use App\Models\YourModel; // Import your Eloquent model
+
+$dynamicConditions = [
+    // Specify your dynamic conditions here
+];
+
+$count = DynamicModelDataTableHelper::countFilteredServerSideDataTable(new YourModel(), $dynamicConditions);
+```
+
+### Dynamic Conditions
+
+The 'dynamicConditions' parameter allows you to customize your database query based on various conditions. These conditions can include ordering, selecting specific columns, filtering based on relationships, and more.
+
+```php
+$dynamicConditions = [
+    ['method' => 'orderBy', 'args' => [function() { return ['column' => 'model_column_1', 'direction' => 'DESC']; }]],
+    ['method' => 'select', 'args' => [['model_column_1', 'alias_name_1']]],
+    // Add more conditions as needed
+];
+```
+
+### Search Functionality
+
+You can enable search functionality by providing columns and relationships to search in.
+
+```php
+$searchColumns = ['column1', 'column2']; // Specify columns to search in
+$searchRelationships = ['relationName' => ['related_column1', 'related_column2']]; // Specify relationships to search in
+
+$data = DynamicModelDataTableHelper::getServerSideDataTable(new YourModel(), $dynamicConditions, $searchColumns, $searchRelationships);
+```
+
+### Pagination
+
+Pagination is applied automatically based on the request parameters.
+
+```php
+$data = DynamicModelDataTableHelper::getServerSideDataTable(new YourModel(), $dynamicConditions, $searchColumns, $searchRelationships);
+```
+
+### Example
+
+Here's an example of how you can utilize these methods in your controller:
+
+```php
+use App\Models\YourModel;
+use ChandraHemant\ServerSideDatatable\DynamicModelDataTableHelper;
+
+class YourController extends Controller
+{
+    public function index()
+    {
+        $dynamicConditions = [
+            // Specify your dynamic conditions here
+        ];
+
+        $searchColumns = ['column1', 'column2'];
+        $searchRelationships = ['relationName' => ['related_column1', 'related_column2']];
+
+        $data = DynamicModelDataTableHelper::getServerSideDataTable(new YourModel(), $dynamicConditions, $searchColumns, $searchRelationships);
+
+        return view('your_view', compact('data'));
+    }
+}
+```
+
+## Conclusion
+
+This guide provides a basic overview of how to use the `DynamicModelDataTableHelper` class in your Laravel application. By following these instructions, you can easily implement server-side data tables with dynamic conditions, pagination, and search functionality.
+
+
+
+# DataTableHelper Class
+
+The DataTableHelper class is a PHP utility designed to enhance server-side data retrieval for DataTables within Laravel applications. DataTables is a popular JavaScript library used for creating interactive and dynamic tables in web applications. This class provides a set of methods to build and execute flexible database queries, supporting features such as table joins, column selection, search filtering, ordering, and pagination. 
 
 ## Methods
 

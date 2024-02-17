@@ -4,6 +4,14 @@ namespace ChandraHemant\ServerSideDatatable;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Class: DynamicModelDataTableHelper
+ * Author: Hemant Kumar Chandra
+ * Category: Helpers
+ *
+ * This class provides helper methods for retrieving data from a database table with the option to join multiple tables.
+ */
+
 class DynamicModelDataTableHelper
 {
     /**
