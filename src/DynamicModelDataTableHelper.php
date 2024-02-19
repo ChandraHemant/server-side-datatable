@@ -103,8 +103,6 @@ class DynamicModelDataTableHelper
      */
     public static function applyDynamicConditions($model, $dynamicConditions, $searchColumns = [], $searchRelationships = [])
     {
-        $searchValue = request('search.value');
-
         // Iterate over dynamic conditions
         foreach ($dynamicConditions as $condition) {
             $method = $condition['method'];
@@ -128,15 +126,22 @@ class DynamicModelDataTableHelper
                 // Select specific columns
                 $model->select(...$args);
             } elseif ($method === 'orderBy') {
+                $orderColumnIndex = request('order.0.column');
+                $orderDirection = request('order.0.dir');
+
+                // Make sure $orderDirection is a string
+                $orderDirection = is_string($orderDirection) ? strtolower($orderDirection) : 'asc';
+                $orderDirection = $orderDirection === 'desc' ? 'desc' : 'asc';
+
                 // Apply ordering
-                $orderByArgs = $args[0]();
-                $model->orderBy($orderByArgs[0], $orderByArgs[1]);
+                $model->orderBy($args[$orderColumnIndex], $orderDirection);
             } elseif ($method === 'whereHas') {
                 // Apply relationship constraint
                 $relationship = $args[0];
                 $constraint = $args[1];
                 $model->whereHas($relationship, $constraint);
             } elseif ($method === 'whereColumn') {
+                $searchValue = request('search.value');
                 // Apply column comparison constraint
                 $column1 = $args[0];
                 $operator = $args[1];
