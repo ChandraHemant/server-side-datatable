@@ -11,47 +11,59 @@ use Illuminate\Database\Eloquent\Model;
  *
  * This class provides helper methods for retrieving data from a database table with the option to join multiple tables.
  */
-
 class DynamicModelDataTableHelper
 {
+    private $eloquentModel;
+    private $dynamicConditions;
+    private $searchColumns;
+    private $searchRelationships;
+
     /**
-     * Retrieve server-side DataTables data from an Eloquent model.
+     * Constructor method to initialize the class with required parameters.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $eloquentModel
      *   The Eloquent model to query for data.
      *
      * @param  array  $dynamicConditions
      *   An array specifying the dynamic conditions for the query.
-     *   Example:
-     *   $dynamicConditions = [
-     *       ['method' => 'orderBy', 'args' => [function() { return ['column' => 'model_column_1', 'direction' => 'DESC']; }]],
-     *       ['method' => 'orderBy', 'args' => [function() { return ['column' => 'model_relation_function.relation_model_column_1', 'direction' => 'ASC']; }]],
-     *       ['method' => 'select', 'args' => [['model_column_1', 'alias_name_1']]],
-     *       ['method' => 'whereHas', 'args' => ['relationName', function($query) { $query->where('column', 'value'); }]],
-     *       ['method' => 'whereColumn', 'args' => ['column1', '=', 'column2', 'condition' => 'searchValue']],
-     *   ];
      *
      * @param  array  $searchColumns
      *   An array specifying columns to search in.
      *
      * @param  array  $searchRelationships
      *   An array specifying relationships to search in.
+     */
+    public function __construct(Model $eloquentModel, array $dynamicConditions = [], array $searchColumns = [], array $searchRelationships = [])
+    {
+        $this->eloquentModel = $eloquentModel;
+        $this->dynamicConditions = $dynamicConditions;
+        $this->searchColumns = $searchColumns;
+        $this->searchRelationships = $searchRelationships;
+    }
+    
+    /**
+     * Retrieve server-side DataTables data from the provided Eloquent model.
      *
      * @return \Illuminate\Support\Collection
      *   The result of the server-side DataTables query.
      */
-    public static function getServerSideDataTable(Model $eloquentModel, $dynamicConditions, $searchColumns = [], $searchRelationships = [])
+
+    public function getServerSideDataTable(bool $query = false)
     {
-        $model = $eloquentModel->query();
+        $model = $this->eloquentModel->query();
 
         // Apply dynamic conditions to the query
-        self::applyDynamicConditions($model, $dynamicConditions, $searchColumns, $searchRelationships);
+        $this->applyDynamicConditions($model, $this->dynamicConditions, $this->searchColumns, $this->searchRelationships);
 
         // Apply pagination to the query
-        self::applyPagination($model);
+        $this->applyPagination($model);
 
         // Retrieve the data
-        return $model->get();
+        if($query){
+            return $model;
+        }else{
+            return $model->get();
+        }
     }
 
     /**
@@ -72,12 +84,12 @@ class DynamicModelDataTableHelper
      * @return int
      *   The count of filtered records.
      */
-    public static function countFilteredServerSideDataTable(Model $eloquentModel, $dynamicConditions, $searchColumns = [], $searchRelationships = [])
+    public function countFilteredServerSideDataTable()
     {
-        $model = $eloquentModel->query();
+        $model = $this->eloquentModel->query();
 
         // Apply dynamic conditions to the query
-        self::applyDynamicConditions($model, $dynamicConditions, $searchColumns, $searchRelationships);
+        $this->applyDynamicConditions($model, $this->dynamicConditions, $this->searchColumns, $this->searchRelationships);
 
         // Count the filtered records
         return $model->count();
@@ -88,20 +100,8 @@ class DynamicModelDataTableHelper
      *
      * @param  mixed  $model
      *   The query builder instance.
-     *
-     * @param  array  $dynamicConditions
-     *   An array specifying the dynamic conditions for the query.
-     *
-     * @param  array  $searchColumns
-     *   An array specifying columns to search in.
-     *
-     * @param  array  $searchRelationships
-     *   An array specifying relationships to search in.
-     *
-     * @return mixed
-     *   The modified query builder instance.
      */
-    public static function applyDynamicConditions($model, $dynamicConditions, $searchColumns = [], $searchRelationships = [])
+    private function applyDynamicConditions($model, $dynamicConditions, $searchColumns = [], $searchRelationships = [])
     {
         // Iterate over dynamic conditions
         foreach ($dynamicConditions as $condition) {
@@ -193,10 +193,80 @@ class DynamicModelDataTableHelper
      * @param  mixed  $query
      *   The query builder instance.
      */
-    private static function applyPagination($query)
+    private function applyPagination($query)
     {
         if (filled(request()->input('length')) && filled(request()->input('start'))) {
             $query->offset(request()->input('start'))->limit(request()->input('length'));
         }
     }
+
+    
+    /*
+    * Example Usage:
+    */
+
+    /*
+    $dynamicConditions = [
+        [
+            'method' => 'whereColumn',
+            'args' => ['column1', '>=', 'column2'],
+            'condition' => 'loss'
+        ],
+        [
+            'method' => 'whereColumn',
+            'args' => ['column1', '<', 'column2'],
+            'condition' => 'profit'
+        ],
+        [
+            'method' => 'whereRaw',
+            'args' => ['YEAR(column3) = ?', session()->get('financialYear')]
+        ],
+        [
+            'method' => 'whereIn',
+            'args' => ['column4', session()->get('values')]
+        ],
+        [
+            'method' => 'where',
+            'args' => ['column6', 0]
+        ],
+        [
+            'method' => 'whereHas',
+            'args' => ['relation1', function ($query1) {
+                $query1->where('column1', '=', 4);
+            }]
+        ],
+        [
+            'method' => 'select',
+            'args' => ['column1','column2','column3','column4','column5','column6','column7','column8','column9'],
+            'relation' => ['relation1','relation2','relation3','relation4','relation5','relation6','relation7','relation8','relation9'],
+        ],
+        [
+            'method' => 'orderBy',
+            'args' => ['column1','column2','column3','column4','column5','column6','column7','column8','column9']
+        ]
+    ];
+
+    // Define search value, columns, and relationships
+    $searchColumns = ['column1','column2','column3','column4','column5','column6','column7','column8','column9'];
+
+    $searchRelationships = [
+        'relation1' => ['column1'],
+        'relation2' => ['column2'],
+        'relation3' => ['column3'],
+        'relation4' => ['column4'],
+        'relation5' => ['column5'],
+        'relation6' => ['column6'],
+        'relation7' => ['column7'],
+        'relation8' => ['column8'],
+        'relation9' => ['column9'],
+    ];
+    $helper = new DynamicModelDataTableHelper(
+        $modelInstance,
+        $dynamicConditionsArray,
+        $searchColumnsArray,
+        $searchRelationshipsArray
+    );
+
+    $result = $helper->getServerSideDataTable();
+    */
 }
