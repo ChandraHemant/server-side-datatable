@@ -34,8 +34,20 @@ use App\Models\YourModel; // Import your Eloquent model
 $dynamicConditions = [
     // Specify your dynamic conditions here
 ];
+$searchColumns = [
+    // Specify your searchable columns here
+];
+$searchRelationships = [
+    // Specify your dynamic relationships here
+];
+$helper = new DynamicModelDataTableHelper(
+    eloquentModel: new YourModel(),
+    dynamicConditions: $dynamicConditions,
+    searchColumns: $searchColumns,
+    searchRelationships: $searchRelationships
+);
 
-$data = DynamicModelDataTableHelper::getServerSideDataTable(new YourModel(), $dynamicConditions);
+$result = $helper->getServerSideDataTable();
 ```
 
 ### Counting Filtered Records
@@ -48,8 +60,20 @@ use App\Models\YourModel; // Import your Eloquent model
 $dynamicConditions = [
     // Specify your dynamic conditions here
 ];
+$searchColumns = [
+    // Specify your searchable columns here
+];
+$searchRelationships = [
+    // Specify your dynamic relationships here
+];
+$helper = new DynamicModelDataTableHelper(
+    eloquentModel: new YourModel(),
+    dynamicConditions: $dynamicConditions,
+    searchColumns: $searchColumns,
+    searchRelationships: $searchRelationships
+);
 
-$count = DynamicModelDataTableHelper::countFilteredServerSideDataTable(new YourModel(), $dynamicConditions);
+$result = $helper->countFilteredServerSideDataTable();
 ```
 
 ### Dynamic Conditions
@@ -57,11 +81,42 @@ $count = DynamicModelDataTableHelper::countFilteredServerSideDataTable(new YourM
 The 'dynamicConditions' parameter allows you to customize your database query based on various conditions. These conditions can include ordering, selecting specific columns, filtering based on relationships, and more.
 
 ```php
-$dynamicConditions = [
-    ['method' => 'orderBy', 'args' => [function() { return ['column' => 'model_column_1', 'direction' => 'DESC']; }]],
-    ['method' => 'select', 'args' => [['model_column_1', 'alias_name_1']]],
-    // Add more conditions as needed
+
+ $dynamicConditions = [
+    [
+        'method' => 'whereColumn',
+        'args' => ['column1', '>=', 'column2'],
+        'condition' => 'loss'
+    ],
+    [
+        'method' => 'whereRaw',
+        'args' => ['YEAR(column3) = ?', session()->get('financialYear')]
+    ],
+    [
+        'method' => 'whereIn',
+        'args' => ['column4', session()->get('values')]
+    ],
+    [
+        'method' => 'where',
+        'args' => ['column6', 0]
+    ],
+    [
+        'method' => 'whereHas',
+        'args' => ['relation1', function ($query1) {
+            $query1->where('column1', '=', 4);
+        }]
+    ],
+    [
+        'method' => 'select',
+        'args' => ['column1','column2','column3','column4','column5','column6','column7','column8','column9'],
+        'relation' => ['relation1','relation2','relation3','relation4','relation5','relation6','relation7','relation8','relation9'],
+    ],
+    [
+        'method' => 'orderBy',
+        'args' => ['column1','column2','column3','column4','column5','column6','column7','column8','column9']
+    ]
 ];
+
 ```
 
 ### Search Functionality
@@ -69,19 +124,43 @@ $dynamicConditions = [
 You can enable search functionality by providing columns and relationships to search in.
 
 ```php
-$searchColumns = ['column1', 'column2']; // Specify columns to search in
-$searchRelationships = ['relationName' => ['related_column1', 'related_column2']]; // Specify relationships to search in
 
-$data = DynamicModelDataTableHelper::getServerSideDataTable(new YourModel(), $dynamicConditions, $searchColumns, $searchRelationships);
+// Define search value, columns, and relationships
+$searchColumns = ['column1','column2','column3','column4','column5','column6','column7','column8','column9'];
+
+$searchRelationships = [
+    'relation1' => ['column1'],
+    'relation2' => ['column2'],
+    'relation3' => ['column3'],
+    'relation4' => ['column4'],
+    'relation5' => ['column5'],
+    'relation6' => ['column6'],
+    'relation7' => ['column7'],
+    'relation8' => ['column8'],
+    'relation9' => ['column9'],
+];
 ```
 
 ### Pagination
 
 Pagination is applied automatically based on the request parameters.
 
-```php
-$data = DynamicModelDataTableHelper::getServerSideDataTable(new YourModel(), $dynamicConditions, $searchColumns, $searchRelationships);
-```
+
+## Constructor Parameters
+
+* `$eloquentModel` (Illuminate\Database\Eloquent\Model): The Eloquent model to query for data.
+* `$dynamicConditions` (array): An array specifying the dynamic conditions for the query.
+* `$searchColumns` (array): An array specifying columns to search in.
+* `$searchRelationships` (array): An array specifying relationships to search in.
+
+## Methods
+
+`getServerSideDataTable(bool $query = false): Illuminate\Support\Collection`
+Retrieve server-side DataTables data from the provided Eloquent model.
+
+### Parameters:
+* `$query` (bool, optional): Whether to return the query builder instead of executing the query. Default is `false`.
+
 
 ### Example
 
@@ -96,13 +175,67 @@ class YourController extends Controller
     public function index()
     {
         $dynamicConditions = [
-            // Specify your dynamic conditions here
+            [
+                'method' => 'whereColumn',
+                'args' => ['column1', '>=', 'column2'],
+                'condition' => 'loss'
+            ],
+            [
+                'method' => 'whereColumn',
+                'args' => ['column1', '<', 'column2'],
+                'condition' => 'profit'
+            ],
+            [
+                'method' => 'whereRaw',
+                'args' => ['YEAR(column3) = ?', session()->get('financialYear')]
+            ],
+            [
+                'method' => 'whereIn',
+                'args' => ['column4', session()->get('values')]
+            ],
+            [
+                'method' => 'where',
+                'args' => ['column6', 0]
+            ],
+            [
+                'method' => 'whereHas',
+                'args' => ['relation1', function ($query1) {
+                    $query1->where('column1', '=', 4);
+                }]
+            ],
+            [
+                'method' => 'select',
+                'args' => ['column1','column2','column3','column4','column5','column6','column7','column8','column9'],
+                'relation' => ['relation1','relation2','relation3','relation4','relation5','relation6','relation7','relation8','relation9'],
+            ],
+            [
+                'method' => 'orderBy',
+                'args' => ['column1','column2','column3','column4','column5','column6','column7','column8','column9']
+            ]
         ];
 
-        $searchColumns = ['column1', 'column2'];
-        $searchRelationships = ['relationName' => ['related_column1', 'related_column2']];
+        // Define search value, columns, and relationships
+        $searchColumns = ['column1','column2','column3','column4','column5','column6','column7','column8','column9'];
 
-        $data = DynamicModelDataTableHelper::getServerSideDataTable(new YourModel(), $dynamicConditions, $searchColumns, $searchRelationships);
+        $searchRelationships = [
+            'relation1' => ['column1'],
+            'relation2' => ['column2'],
+            'relation3' => ['column3'],
+            'relation4' => ['column4'],
+            'relation5' => ['column5'],
+            'relation6' => ['column6'],
+            'relation7' => ['column7'],
+            'relation8' => ['column8'],
+            'relation9' => ['column9'],
+        ];
+        $helper = new DynamicModelDataTableHelper(
+            eloquentModel: $modelInstance,
+            dynamicConditions: $dynamicConditions,
+            searchColumns: $searchColumns,
+            searchRelationships: $searchRelationships
+        );
+
+        $data = $helper->getServerSideDataTable();
 
         return view('your_view', compact('data'));
     }

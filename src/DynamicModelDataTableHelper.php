@@ -261,10 +261,10 @@ class DynamicModelDataTableHelper
         'relation9' => ['column9'],
     ];
     $helper = new DynamicModelDataTableHelper(
-        $modelInstance,
-        $dynamicConditionsArray,
-        $searchColumnsArray,
-        $searchRelationshipsArray
+        eloquentModel: $modelInstance,
+        dynamicConditions: $dynamicConditions,
+        searchColumns: $searchColumns,
+        searchRelationships: $searchRelationships
     );
 
     $result = $helper->getServerSideDataTable();
