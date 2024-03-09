@@ -40,7 +40,7 @@ class DynamicModelDataTableHelper
         $this->searchColumns = $searchColumns;
         $this->searchRelationships = $searchRelationships;
     }
-    
+
     /**
      * Retrieve server-side DataTables data from the provided Eloquent model.
      *
@@ -104,6 +104,7 @@ class DynamicModelDataTableHelper
     private function applyDynamicConditions($model, $dynamicConditions, $searchColumns = [], $searchRelationships = [])
     {
         // Iterate over dynamic conditions
+        $searchValue = request('search.value');
         foreach ($dynamicConditions as $condition) {
             $method = $condition['method'];
             $args = $condition['args'];
@@ -141,7 +142,6 @@ class DynamicModelDataTableHelper
                 $constraint = $args[1];
                 $model->whereHas($relationship, $constraint);
             } elseif ($method === 'whereColumn') {
-                $searchValue = request('search.value');
                 // Apply column comparison constraint
                 $column1 = $args[0];
                 $operator = $args[1];
@@ -200,7 +200,7 @@ class DynamicModelDataTableHelper
         }
     }
 
-    
+
     /*
     * Example Usage:
     */
