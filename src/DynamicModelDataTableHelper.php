@@ -138,9 +138,9 @@ class DynamicModelDataTableHelper
                 $model->orderBy($args[$orderColumnIndex], $orderDirection);
             } elseif ($method === 'whereHas') {
                 // Apply relationship constraint
-                $relationship = $args[0];
-                $constraint = $args[1];
-                $model->whereHas($relationship, $constraint);
+                $model->whereHas($condition['relation'], function ($query1) use ($args){
+                    return $query1->where(...$args);
+                });
             } elseif ($method === 'whereColumn') {
                 // Apply column comparison constraint
                 $column1 = $args[0];
@@ -231,9 +231,8 @@ class DynamicModelDataTableHelper
         ],
         [
             'method' => 'whereHas',
-            'args' => ['relation1', function ($query1) {
-                $query1->where('column1', '=', 4);
-            }]
+            'args' => ['column7', 'LIKE', $request->input('status')],
+            'relation' => 'o_status'
         ],
         [
             'method' => 'select',
