@@ -210,20 +210,34 @@ class YourController extends Controller
                 'args' => ['column', 'value'],
                 'relation' => 'relationship_method'
             ],
-            [
-                'method' => 'nestedCondition',
-                'parentMethod' => 'orWhere',
-                'nestedMethod' => [
-                    [
-                        'method' => 'where',
-                        'args' => ['column1', '!=', 0]
-                    ],
-                    [
-                        'method' => 'whereIn',
-                        'args' => ['column2', [1,0]]
+             [
+                    'method' => 'nestedCondition',
+                    'parentMethod' => 'where',
+                    'nestedMethod' => [
+                        [
+                            'childMethod' => 'where',
+                            [
+                                'method' => 'where',
+                                'args' => ['column1', '=', 5]
+                            ],
+                            [
+                                'method' => 'whereIn',
+                                'args' => ['column2', [1, 4, 7]]
+                            ],
+                        ],
+                        [
+                            'childMethod' => 'orWhere',
+                            [
+                                'method' => 'where',
+                                'args' => ['column1', '!=', 5]
+                            ],
+                            [
+                                'method' => 'whereIn',
+                                'args' => ['column3', [1, 4, 7]]
+                            ],
+                        ],
                     ],
                 ],
-            ],
             [
                 'method' => 'select',
                 'args' => ['column1','column2','column3','column4','column5','column6','column7','column8','column9'],
