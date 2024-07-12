@@ -204,6 +204,27 @@ class YourController extends Controller
                 }]
             ],
             [
+                'method' => 'whereRelation',
+                'parentMethod' => 'whereHas',
+                'childMethod' => 'whereIn',
+                'args' => ['column', 'value'],
+                'relation' => 'relationship_method'
+            ],
+            [
+                'method' => 'nestedCondition',
+                'parentMethod' => 'orWhere',
+                'nestedMethod' => [
+                    [
+                        'method' => 'where',
+                        'args' => ['column1', '!=', 0]
+                    ],
+                    [
+                        'method' => 'whereIn',
+                        'args' => ['column2', [1,0]]
+                    ],
+                ],
+            ],
+            [
                 'method' => 'select',
                 'args' => ['column1','column2','column3','column4','column5','column6','column7','column8','column9'],
                 'relation' => ['relation1','relation2','relation3','relation4','relation5','relation6','relation7','relation8','relation9'],
