@@ -136,6 +136,13 @@ class DynamicModelDataTableHelper
 
                 // Apply ordering
                 $model->orderBy($args[$orderColumnIndex], $orderDirection);
+            } elseif ($method === 'nestedCondition') {
+                // Apply nested conditions
+                $model->{$condition['parentMethod']}(function ($query1) use ($condition) {
+                    foreach ($condition['nestedMethod'] as $nestedMethod) {
+                        $query1->{$nestedMethod['method']}(...$nestedMethod['args']);
+                    }
+                });
             } elseif ($method === 'whereRelation') {
                 // Apply relationship constraint
                 $model->$condition['parentMethod']($condition['relation'], function ($query1) use ($args, $condition){
