@@ -107,12 +107,9 @@ class DynamicModelDataTableHelper
         $searchValue = request('search.value');
         foreach ($dynamicConditions as $condition) {
             $method = $condition['method'];
-            $args = $condition['args'] ?? $condition['nestedMethod'][0]['args'];
 
-            // Replace callable arguments with their return values
-            if (is_callable($args[count($args) - 1])) {
-                $args[count($args) - 1] = $args[count($args) - 1]($model);
-            }
+            // Handle arguments, including callable resolution
+            $args = $this->resolveArguments($condition['args'] ?? []);
 
             // Apply different methods based on conditions
             if ($method === 'select') {
@@ -138,9 +135,15 @@ class DynamicModelDataTableHelper
                 $model->orderBy($args[$orderColumnIndex], $orderDirection);
             } elseif ($method === 'nestedCondition') {
                 // Apply nested conditions
-                $model->{$condition['parentMethod']}(function ($query1) use ($condition) {
-                    foreach ($condition['nestedMethod'] as $nestedMethod) {
-                        $query1->{$nestedMethod['method']}(...$nestedMethod['args']);
+                $model->{$condition['parentMethod']}(function ($query) use ($condition) {
+                    foreach ($condition['nestedMethod'] as $nestedConditions) {
+                        $childMethod = $nestedConditions['childMethod'];
+                        foreach ($nestedConditions as $nestedCondition) {
+                            if ($nestedCondition !== $nestedConditions['childMethod']) {
+                                $nestedArgs = $this->resolveArguments($nestedCondition['args'] ?? []);
+                                $query->{$childMethod}(...$nestedArgs);
+                            }
+                        }
                     }
                 });
             } elseif ($method === 'whereRelation') {
@@ -196,6 +199,27 @@ class DynamicModelDataTableHelper
         }
 
         return $model;
+    }
+
+    /**
+     * Resolve arguments array, replacing callable arguments with their return values.
+     *
+     * @param array $args
+     * @return array
+     */
+    private function resolveArguments(array $args)
+    {
+        if (empty($args)) {
+            return [];
+        }
+
+        foreach ($args as &$arg) {
+            if (is_callable($arg)) {
+                $arg = $arg(); // Execute the callable and replace with its return value
+            }
+        }
+
+        return $args;
     }
 
 
