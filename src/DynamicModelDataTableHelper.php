@@ -107,7 +107,7 @@ class DynamicModelDataTableHelper
         $searchValue = request('search.value');
         foreach ($dynamicConditions as $condition) {
             $method = $condition['method'];
-            $args = $condition['args'];
+            $args = $condition['args'] ?? $condition['nestedMethod'][0]['args'];
 
             // Replace callable arguments with their return values
             if (is_callable($args[count($args) - 1])) {
