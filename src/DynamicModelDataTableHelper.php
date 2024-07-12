@@ -126,7 +126,7 @@ class DynamicModelDataTableHelper
                 }
                 // Select specific columns
                 $model->select(...$args);
-            } elseif ($method === 'orderBy') {
+            } elseif ($method === 'sortBy') {
                 $orderColumnIndex = request('order.0.column');
                 $orderDirection = request('order.0.dir');
 
@@ -136,6 +136,11 @@ class DynamicModelDataTableHelper
 
                 // Apply ordering
                 $model->orderBy($args[$orderColumnIndex], $orderDirection);
+            } elseif ($method === 'whereRelation') {
+                // Apply relationship constraint
+                $model->$condition['parentMethod']($condition['relation'], function ($query1) use ($args, $condition){
+                    return $query1->$condition['childMethod'](...$args);
+                });
             } elseif ($method === 'whereHas') {
                 // Apply relationship constraint
                 $model->whereHas($condition['relation'], function ($query1) use ($args){
