@@ -166,6 +166,21 @@ class DynamicModelDataTableHelper
                 } else {
                     continue;
                 }
+            } elseif ($method === 'nestedRelationCondition') {
+                $model->{$condition['parentMethod']}($condition['relation'], function ($query) use ($condition) {
+                    if (isset($condition['args'])) {
+                        $args = $this->resolveArguments($condition['args']);
+                        $query->where(...$args);
+                    }
+                    foreach ($condition['nestedMethod'] as $nestedCondition) {
+                        $query->{$nestedCondition['childMethod']}($nestedCondition['relation'], function ($subQuery) use ($nestedCondition) {
+                            foreach ($nestedCondition['nestedConditions'] as $condition) {
+                                $args = isset($condition['args']) ? $this->resolveArguments($condition['args']) : [];
+                                $subQuery->{$condition['method']}(...$args);
+                            }
+                        });
+                    }
+                });
             } else {
                 // Apply other dynamic methods
                 $model = $model->$method(...$args);
@@ -269,6 +284,63 @@ class DynamicModelDataTableHelper
             'method' => 'whereHas',
             'args' => ['column7', 'LIKE', $request->input('status')],
             'relation' => 'o_status'
+        ],
+        [
+            'method' => 'whereRelation',
+            'parentMethod' => 'whereHas',
+            'childMethod' => 'whereIn',
+            'args' => ['column', 'value'],
+            'relation' => 'relationship_method'
+        ],
+        [
+            'method' => 'nestedCondition',
+            'parentMethod' => 'where',
+            'nestedMethod' => [
+                [
+                    'childMethod' => 'where',
+                    [
+                        'method' => 'where',
+                        'args' => ['column1', '=', 5]
+                    ],
+                    [
+                        'method' => 'whereIn',
+                        'args' => ['column2', [1, 4, 7]]
+                    ],
+                ],
+                [
+                    'childMethod' => 'orWhere',
+                    [
+                        'method' => 'where',
+                        'args' => ['column1', '!=', 5]
+                    ],
+                    [
+                        'method' => 'whereIn',
+                        'args' => ['column3', [1, 4, 7]]
+                    ],
+                ],
+            ],
+        ], 
+        [
+            'method' => 'nestedRelationCondition',
+            'parentMethod' => 'whereHas',
+            'relation' => 'relationship_method',
+            'args' => [['column1', $user->id], ['column2', $statusId]],
+            'nestedMethod' => [
+                [
+                    'childMethod' => 'whereDoesntHave',
+                    'relation' => 'relationship_method1',
+                    'nestedConditions' => [
+                        [
+                            'method' => 'where',
+                            'args' => ['log_request_id', $requestId]
+                        ],
+                        [
+                            'method' => 'where',
+                            'args' => [['column1', $user->id], ['column2', $statusId]]
+                        ]
+                    ]
+                ]
+            ]
         ],
         [
             'method' => 'select',

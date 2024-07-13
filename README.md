@@ -210,34 +210,56 @@ class YourController extends Controller
                 'args' => ['column', 'value'],
                 'relation' => 'relationship_method'
             ],
-             [
-                    'method' => 'nestedCondition',
-                    'parentMethod' => 'where',
-                    'nestedMethod' => [
+            [
+                'method' => 'nestedCondition',
+                'parentMethod' => 'where',
+                'nestedMethod' => [
+                    [
+                        'childMethod' => 'where',
                         [
-                            'childMethod' => 'where',
-                            [
-                                'method' => 'where',
-                                'args' => ['column1', '=', 5]
-                            ],
-                            [
-                                'method' => 'whereIn',
-                                'args' => ['column2', [1, 4, 7]]
-                            ],
+                            'method' => 'where',
+                            'args' => ['column1', '=', 5]
                         ],
                         [
-                            'childMethod' => 'orWhere',
-                            [
-                                'method' => 'where',
-                                'args' => ['column1', '!=', 5]
-                            ],
-                            [
-                                'method' => 'whereIn',
-                                'args' => ['column3', [1, 4, 7]]
-                            ],
+                            'method' => 'whereIn',
+                            'args' => ['column2', [1, 4, 7]]
+                        ],
+                    ],
+                    [
+                        'childMethod' => 'orWhere',
+                        [
+                            'method' => 'where',
+                            'args' => ['column1', '!=', 5]
+                        ],
+                        [
+                            'method' => 'whereIn',
+                            'args' => ['column3', [1, 4, 7]]
                         ],
                     ],
                 ],
+            ], 
+            [
+                'method' => 'nestedRelationCondition',
+                'parentMethod' => 'whereHas',
+                'relation' => 'relationship_method',
+                'args' => [['column1', $user->id], ['column2', $statusId]],
+                'nestedMethod' => [
+                    [
+                        'childMethod' => 'whereDoesntHave',
+                        'relation' => 'relationship_method1',
+                        'nestedConditions' => [
+                            [
+                                'method' => 'where',
+                                'args' => ['log_request_id', $requestId]
+                            ],
+                            [
+                                'method' => 'where',
+                                'args' => [['column1', $user->id], ['column2', $statusId]]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
             [
                 'method' => 'select',
                 'args' => ['column1','column2','column3','column4','column5','column6','column7','column8','column9'],
