@@ -148,8 +148,8 @@ class DynamicModelDataTableHelper
                 });
             } elseif ($method === 'whereRelation') {
                 // Apply relationship constraint
-                $model->$condition['parentMethod']($condition['relation'], function ($query1) use ($args, $condition){
-                    return $query1->$condition['childMethod'](...$args);
+                $model->{$condition['parentMethod']}($condition['relation'], function ($query1) use ($args, $condition){
+                    return $query1->{$condition['childMethod']}(...$args);
                 });
             } elseif ($method === 'whereHas') {
                 // Apply relationship constraint
@@ -319,7 +319,7 @@ class DynamicModelDataTableHelper
                     ],
                 ],
             ],
-        ], 
+        ],
         [
             'method' => 'nestedRelationCondition',
             'parentMethod' => 'whereHas',
