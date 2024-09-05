@@ -1,0 +1,20 @@
+{
+    "name": "chandra-hemant/server-side-datatable",
+    "description": "A laravel package for Server Side Datatable helpers",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "ChandraHemant\\ServerSideDatatable\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Hemant Chandra",
+            "email": "hemantchandra242@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1"
+    }
+}
