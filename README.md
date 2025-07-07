@@ -19,7 +19,7 @@ The ChandraHemant/ServerSideDatatable package provides helper methods for retrie
 
 ---
 
-# 🚀 SimpleDataTable Class (Recommended)
+# 🚀 FlexibleDataTable Class (Recommended)
 
 **NEW:** The most developer-friendly approach with Laravel-style fluent interface!
 
@@ -39,10 +39,10 @@ The ChandraHemant/ServerSideDatatable package provides helper methods for retrie
 ### Basic Usage
 
 ```php
-use ChandraHemant\ServerSideDatatable\SimpleDataTable;
+use ChandraHemant\ServerSideDatatable\FlexibleDataTable;
 
 // Simple DataTable response
-return SimpleDataTable::of(new User())
+return FlexibleDataTable::of(new User())
     ->searchable(['name', 'email', 'phone'])
     ->orderable(['name', 'email', 'created_at'])
     ->make();
@@ -52,7 +52,7 @@ return SimpleDataTable::of(new User())
 
 ```php
 // Complex query with all Laravel functions
-return SimpleDataTable::of(new Order())
+return FlexibleDataTable::of(new Order())
     // Basic Laravel query methods
     ->where('status', 'completed')
     ->whereIn('type', ['online', 'offline'])
@@ -92,19 +92,19 @@ return SimpleDataTable::of(new Order())
 
 ```php
 // 1. DataTable JSON response (for AJAX)
-$dataTableResponse = SimpleDataTable::of(new Product())
+$dataTableResponse = FlexibleDataTable::of(new Product())
     ->where('is_active', 1)
     ->searchable(['name', 'sku'])
     ->make();
 
 // 2. Collection of models (for other uses)
-$products = SimpleDataTable::of(new Product())
+$products = FlexibleDataTable::of(new Product())
     ->where('is_active', 1)
     ->searchable(['name', 'sku'])
     ->get();
 
 // 3. Query builder (for further customization)
-$query = SimpleDataTable::of(new Product())
+$query = FlexibleDataTable::of(new Product())
     ->where('is_active', 1)
     ->searchable(['name', 'sku'])
     ->getQuery();
@@ -117,7 +117,7 @@ $finalResults = $query->where('category_id', 5)->paginate(15);
 
 ```php
 // Conditional logic
-SimpleDataTable::of(new Transaction())
+FlexibleDataTable::of(new Transaction())
     ->when(request('status'), function($query, $status) {
         $query->where('status', $status);
     })
@@ -127,12 +127,12 @@ SimpleDataTable::of(new Transaction())
     ->make();
 
 // Profit/Loss helper
-SimpleDataTable::of(new Transaction())
+FlexibleDataTable::of(new Transaction())
     ->profitLoss('credit_amount', 'debit_amount', request('filter'))
     ->make();
 
 // Year filtering helper
-SimpleDataTable::of(new Sale())
+FlexibleDataTable::of(new Sale())
     ->filterByYear('sale_date', 2024)
     ->make();
 ```
@@ -140,14 +140,14 @@ SimpleDataTable::of(new Sale())
 ## Controller Example
 
 ```php
-use ChandraHemant\ServerSideDatatable\SimpleDataTable;
+use ChandraHemant\ServerSideDatatable\FlexibleDataTable;
 
 class ProductController extends Controller
 {
     public function index()
     {
         if (request()->ajax()) {
-            return SimpleDataTable::of(new Product())
+            return FlexibleDataTable::of(new Product())
                 ->select(['id', 'name', 'price', 'category_id'])
                 ->where('is_active', true)
                 ->whereIn('category_id', [1, 2, 3])
@@ -456,7 +456,7 @@ $list = ModelDataTableHelper::getServerSideDataTable(new Product(), $column);
 
 ## Comparison of Approaches
 
-| Feature | SimpleDataTable | DynamicModelDataTableHelper | DataTableHelper | ModelDataTableHelper |
+| Feature | FlexibleDataTable | DynamicModelDataTableHelper | DataTableHelper | ModelDataTableHelper |
 |---------|----------------|----------------------------|----------------|-------------------|
 | **Ease of Use** | ⭐⭐⭐⭐⭐ Very Easy | ⭐⭐ Complex | ⭐⭐⭐ Moderate | ⭐⭐⭐ Moderate |
 | **Learning Curve** | ⭐⭐⭐⭐⭐ Zero (Laravel-like) | ⭐⭐ High | ⭐⭐⭐ Medium | ⭐⭐⭐ Medium |
@@ -467,7 +467,7 @@ $list = ModelDataTableHelper::getServerSideDataTable(new Product(), $column);
 
 ## Recommendations
 
-- **🚀 For New Projects:** Use **SimpleDataTable** - Laravel-style, easy to learn and use
+- **🚀 For New Projects:** Use **FlexibleDataTable** - Laravel-style, easy to learn and use
 - **🔧 For Complex Legacy Systems:** Use **DynamicModelDataTableHelper** - Maximum flexibility with array configuration
 - **📊 For Raw SQL Needs:** Use **DataTableHelper** - Direct SQL control with joins
 - **⚡ For Eloquent-Heavy Apps:** Use **ModelDataTableHelper** - Good balance of features and complexity
@@ -478,7 +478,7 @@ $list = ModelDataTableHelper::getServerSideDataTable(new Product(), $column);
 Maintaining consistency in the order and length between the `orderable` array and `Table Headers` is crucial for ensuring accurate column sorting in DataTables. The order of elements in the `orderable` array must align with the headers of the corresponding table.
 
 ### Case-Sensitive Search
-For case-insensitive search functionality, ensure your database collation supports it, or use the built-in LOWER() function implementation in SimpleDataTable.
+For case-insensitive search functionality, ensure your database collation supports it, or use the built-in LOWER() function implementation in FlexibleDataTable.
 
 ### Performance Optimization
 - Add database indexes for searchable and orderable columns
