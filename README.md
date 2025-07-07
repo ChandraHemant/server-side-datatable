@@ -456,14 +456,14 @@ $list = ModelDataTableHelper::getServerSideDataTable(new Product(), $column);
 
 ## Comparison of Approaches
 
-| Feature | FlexibleDataTable | DynamicModelDataTableHelper | DataTableHelper | ModelDataTableHelper |
-|---------|----------------|----------------------------|----------------|-------------------|
-| **Ease of Use** | ⭐⭐⭐⭐⭐ Very Easy | ⭐⭐ Complex | ⭐⭐⭐ Moderate | ⭐⭐⭐ Moderate |
-| **Learning Curve** | ⭐⭐⭐⭐⭐ Zero (Laravel-like) | ⭐⭐ High | ⭐⭐⭐ Medium | ⭐⭐⭐ Medium |
-| **Flexibility** | ⭐⭐⭐⭐⭐ Very High | ⭐⭐⭐⭐⭐ Very High | ⭐⭐⭐⭐ High | ⭐⭐⭐⭐ High |
-| **Laravel Integration** | ⭐⭐⭐⭐⭐ Perfect | ⭐⭐⭐⭐ Good | ⭐⭐⭐ Fair | ⭐⭐⭐⭐ Good |
-| **Code Readability** | ⭐⭐⭐⭐⭐ Excellent | ⭐⭐ Poor | ⭐⭐⭐ Good | ⭐⭐⭐ Good |
-| **Performance** | ⭐⭐⭐⭐⭐ Excellent | ⭐⭐⭐⭐ Good | ⭐⭐⭐⭐ Good | ⭐⭐⭐⭐ Good |
+| Feature | FlexibleDataTable | DynamicModelDataTableHelper |
+|---------|----------------|----------------------------|
+| **Ease of Use** | ⭐⭐⭐⭐⭐ Very Easy | ⭐⭐ Complex |
+| **Learning Curve** | ⭐⭐⭐⭐⭐ Zero (Laravel-like) | ⭐⭐ High |
+| **Flexibility** | ⭐⭐⭐⭐⭐ Very High | ⭐⭐⭐⭐⭐ Very High |
+| **Laravel Integration** | ⭐⭐⭐⭐⭐ Perfect | ⭐⭐⭐⭐ Good |
+| **Code Readability** | ⭐⭐⭐⭐⭐ Excellent | ⭐⭐ Poor |
+| **Performance** | ⭐⭐⭐⭐⭐ Excellent | ⭐⭐⭐⭐ Good |
 
 ## Recommendations
 
